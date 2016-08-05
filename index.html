@@ -1,9 +1,9 @@
-<!DOCTYPE html>
-<!-- saved from url=(0043)http://toadking.com/retroarch/vba_next.html -->
-<html lang="en-us"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!doctype html>
+
+<html lang="en">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
-    
-    <title>RetroArch - Vice C64 </title>
+    <title>RetroArch - Emscripten </title>
     <style>
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       textarea.emscripten { font-family: monospace; width: 80%; }
@@ -14,20 +14,51 @@
       canvas.emscripten { border: 0px none; }
     </style>
   
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Share+Tech+Mono">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
-  <script type="text/javascript" src="/test-sega/emuls/browserfs.min.js"></script>
-  <script src="http://cdn.jsdelivr.net/jquery.cookie/1.4.0/jquery.cookie.min.js"></script>
-    <script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
-    <script src="http://www.google.com/jsapi"></script>
 
     
   </head>
   <body>
-    <h1>RetroArch - Vice C64  </h1>
+    <h1>RetroArch - Emscripten</h1>
+
+ <div class="emscripten" id="emulator">
+<form>
+  <input type="radio" name="core" value="x64.js" checked> Vice X64 (C64)<br>
+  <input type="radio" name="core" value="frodo.js"> Frodo (C64)<br>
+  <input type="radio" name="core" value="cap32.js"> Caprice32 (Amstrad CPC)<br>  
+  <input type="radio" name="core" value="hatari.js"> Hatari (Atari ST/TT/FALCON)  
+</form> 
+<button onclick="" id="emurun">Load emulator!</button>
+    </div>
+
+<script type="text/javascript">
+function loadJS(file) {
+    // DOM: Create the script element
+    var jsElm = document.createElement("script");
+    // set the type attribute
+    jsElm.type = "text/javascript";
+    // make the script element load file
+    jsElm.src = file;
+    // finally insert the element to the body element in order to load the script
+    document.body.appendChild(jsElm);
+}
+</script>
+
+<script type="text/javascript">
+
+function LoadEmu() {
+	var emu = document.querySelector('input[name="core"]:checked').value;
+        loadJS(emu);
+}
+          document.getElementById("emurun").onclick = function(){
+				 LoadEmu();
+
+          document.getElementById('emurun').disabled = true;
+          document.getElementById('emulator').style.color = 'gray';
+	          
+	};
+</script>
+
+
     <hr>
     <div class="emscripten" id="status"></div>
     <div class="emscripten">
@@ -37,10 +68,11 @@
       <canvas class="emscripten" id="canvas" tabindex="1" oncontextmenu="event.preventDefault()"></canvas>
     </div>
     <div class="emscripten emscripten_border" id="openrom">
-      <button id="fakerom" onclick="document.getElementById(&#39;rom&#39;).click()">Select some C64 Disk</button>
+      <button id="fakerom" onclick="document.getElementById(&#39;rom&#39;).click()">Select some contents</button>
       <input style="display: none" type="file" id="rom" name="upload" onclick="document.getElementById(&#39;fakerom&#39;).click();" onchange="runEmulator(event.target.files);" multiple>
     </div>
     <hr>
+
     <div class="emscripten">
       
       <input type="checkbox" id="resize"><label for="resize">Resize canvas</label>
@@ -57,11 +89,15 @@
     <textarea class="emscripten" id="output" rows="8"></textarea>
     <hr>
     <div class="emscripten" id="controls">
+      Works fine with chromium-browser , slow in firefox .<br>
+      Choose an emulator , load it , and then upload some content and it should start!<br>
+      Sorry for messy virtual kbd support , no choice you have to use it.<br>
+      <br>
       Controls:<br>
       <br>
-      A button (OK in menu): X<br>
+      A button (OK in menu): VKBD<br>
       B button (Back in menu): Z<br>
-      X Button: S<br>
+      X Button: Fire<br>
       Y Button: A<br>
       L Button: Q<br>
       R Button: W<br>
@@ -106,7 +142,8 @@
             config += 'video_vsync = false\n';
 			
 			//SDL2 ADD focus to html element
-			
+
+
 		  if (document.getElementById('sdl2').checked) {
 				config += 'video_driver = sdl2\n';
 				config +="input_driver = sdl2\n";
@@ -170,6 +207,9 @@ function setFocusToTextBox(){
     document.getElementById("canvas").focus();
 }
     </script>
+
+
+
     <script type="text/javascript">
       // connect to canvas
       var Module = {
@@ -223,6 +263,8 @@ function setFocusToTextBox(){
 this.totalDependencies + ')' : 'All downloads complete.');
         }
       };
-      Module.setStatus('Downloading...');
+      Module.setStatus('Choose a Core to load...');
     </script>
-	<script type="text/javascript" src="retroarch.js"></script></body></html>
+
+
+</body></html>
