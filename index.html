@@ -190,7 +190,7 @@ function LoadEmu() {
           Module.FS_createDataFile('/home/web_user/.config/retroarch', 'retroarch-core-options.cfg', config_opt, true, true);
 
 //change arguments to match selected rom
-	Module.arguments[1] =name;
+	Module.arguments[1] ="./"+name;
 	Module.arguments[2] = "";
 
           document.getElementById('canvas_div').style.display = 'block';
