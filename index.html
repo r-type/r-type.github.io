@@ -1,271 +1,110 @@
 <!doctype html>
-
 <html lang="en">
-<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <title>RetroArch - Emscripten </title>
-    <style>
-      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-      textarea.emscripten { font-family: monospace; width: 80%; }
-      div.emscripten, h1 { text-align: center; }
-      div.emscripten_border { border: 1px solid black; }
-      #fakerom { font-size: 20pt; margin: 5pt;}
-      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-      canvas.emscripten { border: 0px none; }
-    </style>
-  
+<head>
+   <meta charset="utf-8">
+   <base target="_parent" />
+   <title>RetroArch Web Player</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <!-- Bootstrap core CSS -->
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.3/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css">
+    <!-- Material Design Bootstrap -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.1.1/css/mdb.min.css" rel="stylesheet">   
+   <link href="embed.css" rel="stylesheet" type="text/css">
+   <link rel="shortcut icon" href="media/icon_dark.ico" />
+</head>
+<body>   
+   <!--Navbar-->
+   <nav class="navbar navbar-dark bg-warning">
+       <div class="container">
+           <!--Collapse content-->
+           <div class="collapse navbar-toggleable-xs" id="collapseEx2">
+               <!--Links-->
+               <ul class="nav navbar-nav">
+                  <div class="dropdown">
+                   <li class="nav-item dropdown">
+                       <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Core Selection</button>
+                       <div class="dropdown-menu dropdown-warning" aria-labelledby="dropdownMenu1" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut" id="core-selector">
+                          <a class="dropdown-item" href="." data-core="tiny2014">tiny2014</a>
+                          <a class="dropdown-item" href="." data-core="hatari">hatari</a>
+                          <a class="dropdown-item" href="." data-core="cap32">caprice32</a>
+                          <a class="dropdown-item" href="." data-core="x64">vice X64</a>
+                          <a class="dropdown-item" href="." data-core="frodo">Frodo C64</a>
+                       </div>
 
-    
-  </head>
-  <body>
-    <h1>RetroArch - Emscripten</h1>
+                      <button class="btn btn-warning disabled" id="btnRun" onclick="startRetroArch()" disabled>
+                         <span class="fa fa-spinner fa-spin" id="icnRun"></span> Run
+                      </button>
+                      <button class="btn btn-warning disabled" id="btnAdd" onclick="document.getElementById('btnRom').click()" disabled>
+                         <span class="fa fa-plus" id="icnAdd"></span> Add Content
+                      </button>
+                      <button class="btn btn-warning" id="btnClean" onclick="cleanupStorage();" title="Cleanup">
+                        <span class="fa fa-trash-o" id="icnClean"></span> <span class="sr-only">Cleanup</span>
+                      </button>
+                      <input class="btn btn-warning disabled" style="display: none" type="file" id="btnRom" name="upload" onclick="document.getElementById('btnAdd').click();" onchange="selectFiles(event.target.files)" multiple />
+                      <button class="btn btn-warning disabled" id="btnFullscreen" onclick="Module.requestFullScreen()" title="Fullscreen" disabled>
+                         <span class="fa fa-desktop" id="icnAdd"></span> <span class="sr-only">Fullscreen</span>
+                      </button>
+                      <button class="btn btn-warning disabled" id="btnMenu" onclick="keyPress(112);" title="Menu toggle" disabled>
+                        <span class="fa fa-bars" id="btnMenu"></span> <span class="sr-only">Menu</span>
+                      </button>
+                   </li>
+                </div>
+               </ul>
+           </div>
+           <!--/.Collapse content-->
+       </div>
+   </nav>
+   <div class="bg-inverse webplayer-container">
+      <div class="container">
+         <div class="webplayer_border text-xs-center" id="canvas_div">
+            <canvas class="webplayer col-xs-12" id="canvas" tabindex="1" oncontextmenu="event.preventDefault()" style="display: none"></canvas>
+            <img class="webplayer-preview img-fluid" src="media/canvas.png" width="960px" height="720px" alt="RetroArch Logo">
+         </div>
+      </div>
+   </div>
+   <div class="container">
+      <div class="row">
+         <div class="col-sm-12 form-group btn-group text-xs-center p-t-2">
+            <div class="btn-group" data-toggle="buttons">
+               <label class="btn btn-warning" id="lblLocal" onclick=switchStorage("browser")>
+                  <input type="radio" name="options" id="btnLocal" autocomplete="off" checked>
+                     <span class="fa fa-globe" id="icnLocal"></span> Browser
+                  </input>
+                 </label>
+               <!--uncomment for dropbox support
+               <label class="btn btn-warning" id="lblDrop" onclick=switchStorage("dropbox")>
+                  <input type="radio" name="options" id="btnDrop" autocomplete="off">
+                     <span class="fa fa-dropbox" id="icnDrop"></span> Dropbox
+                  </input>
+               </label>-->
+            </div>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-sm-12 form-group btn-group text-xs-center p-t-2">
+            <div class="card">
+                <div class="view overlay hm-white-slight" align="center">
+                     <textarea id="output" rows="15"></textarea>
+                </div>
+            </div>
 
- <div class="emscripten" id="emulator">
-<form>
-  <input type="radio" name="core" value="tiny2014_libretro.js" checked> Mame Tiny 2014 (Arcade)<br> 
-  <input type="radio" name="core" value="x64.js"> Vice X64 (C64)<br>
-  <input type="radio" name="core" value="frodo.js"> Frodo (C64)<br>
-  <input type="radio" name="core" value="cap32.js"> Caprice32 (Amstrad CPC)<br>  
-  <input type="radio" name="core" value="hatari.js"> Hatari (Atari ST/TT/FALCON)  
-</form> 
-<button onclick="" id="emurun">Load emulator!</button>
-    </div>
+         </div>
+      </div>
+   </div>
+   <div align="center">
+      <p>For now, we recommend you use <a href="https://www.google.com/chrome/">Google Chrome</a> for the best possible performance.</p>
+      <a href="http://www.libretro.com"><img align="center" src="media/libretro-logo.png" /></a>
+   </div>
 
-<script type="text/javascript">
-function loadJS(file) {
-    // DOM: Create the script element
-    var jsElm = document.createElement("script");
-    // set the type attribute
-    jsElm.type = "text/javascript";
-    // make the script element load file
-    jsElm.src = file;
-    // finally insert the element to the body element in order to load the script
-    document.body.appendChild(jsElm);
-}
-</script>
-
-<script type="text/javascript">
-
-function LoadEmu() {
-	var emu = document.querySelector('input[name="core"]:checked').value;
-        loadJS(emu);
-}
-          document.getElementById("emurun").onclick = function(){
-				 LoadEmu();
-
-          document.getElementById('emurun').disabled = true;
-          document.getElementById('emulator').style.color = 'gray';
-	          
-	};
-</script>
-
-
-    <hr>
-    <div class="emscripten" id="status"></div>
-    <div class="emscripten">
-      <progress value="0" max="1" id="progress" hidden=""></progress>  
-    </div>
-    <div class="emscripten_border" id="canvas_div" style="display: none">
-      <canvas class="emscripten" id="canvas" tabindex="1" oncontextmenu="event.preventDefault()"></canvas>
-    </div>
-    <div class="emscripten emscripten_border" id="openrom">
-      <button id="fakerom" onclick="document.getElementById(&#39;rom&#39;).click()">Select some contents</button>
-      <input style="display: none" type="file" id="rom" name="upload" onclick="document.getElementById(&#39;fakerom&#39;).click();" onchange="runEmulator(event.target.files);" multiple>
-    </div>
-    <hr>
-
-    <div class="emscripten">
-      
-      <input type="checkbox" id="resize"><label for="resize">Resize canvas</label>
-      <input type="checkbox" id="pointerLock" checked=""><label for="pointerLock">Lock/hide mouse pointer</label>
-      &nbsp;&nbsp;&nbsp;
-      <input type="button" value="Fullscreen" onclick="Module.requestFullScreen(document.getElementById(&#39;pointerLock&#39;).checked, 
-                                                                                document.getElementById(&#39;resize&#39;).checked)"><br>
-      <input type="checkbox" id="vsync"><label for="vsync" id="vsync-label">Enable V-sync (can only be done before loading game)</label><br>
-      <input type="checkbox" id="sdl2"><label for="sdl2" id="sdl2-label">Enable SDL2</label><br>
-      <input type="textbox" id="latency" size="3" maxlength="3" value="96"> <label for="latency" id="latency-label">Audio latency (ms) (increase if you hear pops at fullspeed, can only be done before loading game)</label>
-    </div>
-    
-    <hr>
-    <textarea class="emscripten" id="output" rows="8"></textarea>
-    <hr>
-    <div class="emscripten" id="controls">
-      Works fine with chromium-browser , slow in firefox .<br>
-      Choose an emulator , load it , and then upload some content and it should start!<br>
-      Sorry for messy virtual kbd support , no choice you have to use it.<br>
-      <br>
-      Controls:<br>
-      <br>
-      A button (OK in menu): VKBD<br>
-      B button (Back in menu): Z<br>
-      X Button: Fire<br>
-      Y Button: A<br>
-      L Button: Q<br>
-      R Button: W<br>
-      D-pad: Arrow Keys<br>
-      Start Button: Enter<br>
-      Select Button: Shift<br>
-      Toggle Menu: F1<br>
-      Fast forward: Spacebar (toggle)<br>
-      Slow motion: E (hold)<br>
-      Save state: F2<br>
-      Load state: F4
-    </div>
-    <script type="text/javascript">
-      var count = 0;
-      function runEmulator(files){
-        count = files.length;
-        document.getElementById("openrom").innerHTML = '';
-        document.getElementById("openrom").style.display = 'none';
-        for (var i = 0; i < files.length; i++) {
-          filereader = new FileReader();
-          filereader.file_name = files[i].name;
-          filereader.onload = function(){initFromData(this.result, this.file_name)};
-          filereader.readAsArrayBuffer(files[i]);
-        }
-      }
-
-      function initFromData(data, name){
-        var dataView = new Uint8Array(data);
-        Module.FS_createDataFile('/', name, dataView, true, false);
-        count--;
-        if (count === 0) {
-          Module.FS_createFolder('/', 'etc', true, true);
-
-          var config = 'input_player1_select = shift\n';
-          var latency = parseInt(document.getElementById('latency').value, 10);
-          if (isNaN(latency)) latency = 96;
-          config += 'audio_latency = ' + latency + '\n';
-		  
-          if (document.getElementById('vsync').checked)
-            config += 'video_vsync = true\n';
-          else
-            config += 'video_vsync = false\n';
-			
-			//SDL2 ADD focus to html element
-
-
-		  if (document.getElementById('sdl2').checked) {
-				config += 'video_driver = sdl2\n';
-				config +="input_driver = sdl2\n";
-				config +="input_joypad_driver = sdl2\n";
-				config += "video_context_driver = sdl_gl\n";
-			    document.getElementById("canvas").focus();
-	            document.getElementById("canvas").addEventListener("keydown",function(e){
-		        e.preventDefault();
-		        return false;
-			      });
-				  
-				document.getElementById("canvas").onclick = function(){
-				document.getElementById("canvas").focus();
-	          
-			    };
-			
-			}else{
-				config += "video_context_driver = emscripten\n";
-				
-				};
-
-				config +="input_driver = sdl2\n";
-				config +="input_joypad_driver = sdl2\n";
-
-//controll -> set amstrad-joystick for P1
-	//config += "input_libretro_device_p1 = \"513\"\n";
-
-          Module.FS_createDataFile('/etc', 'retroarch.cfg', config, true, true);
-
-// create core-options
-        Module.FS_createFolder('/home/web_user', '.config', true, true);
-        Module.FS_createFolder('/home/web_user/.config', 'retroarch', true, true);
-
-          var config_opt = 'cap32_autorun =\"enabled\"\n';
-	  config_opt += 'cap32_Model = \"6128\"\n';
-
-	  config_opt += 'vice_resolution = \"320x240\"\n';
-	  config_opt += 'Statusbar = \"enabled\"\n';
-	  config_opt += 'vice_Drive8Type = \"1571\"\n';
-	  config_opt += 'vice_DriveTrueEmulation = \"enabled\"\n';
-	  config_opt += 'vice_RetroJoy = \"enabled\"\n';
-
-          Module.FS_createDataFile('/home/web_user/.config/retroarch', 'retroarch-core-options.cfg', config_opt, true, true);
-
-//change arguments to match selected rom
-	Module.arguments[1] ="./"+name;
-	Module.arguments[2] = "";
-
-          document.getElementById('canvas_div').style.display = 'block';
-          document.getElementById('vsync').disabled = true;
-          document.getElementById('vsync-label').style.color = 'gray';
-          document.getElementById('latency').disabled = true;
-          document.getElementById('latency-label').style.color = 'gray';
-          Module['callMain'](Module['arguments']);
-        }
-      }
-	 
-
-	
-function setFocusToTextBox(){
-    document.getElementById("canvas").focus();
-}
-    </script>
-
-
-
-    <script type="text/javascript">
-      // connect to canvas
-      var Module = {
-	     noInitialRun: true,
-	arguments: ["-v","dummy.dsk"],
-        preRun: [],
-        postRun: [],
-        print: (function() {
-          var element = document.getElementById('output');
-          element.value = ''; // clear browser cache
-          return function(text) {
-            text = Array.prototype.slice.call(arguments).join(' ');
-            // These replacements are necessary if you render to raw HTML
-            //text = text.replace(/&/g, "&amp;");
-            //text = text.replace(/</g, "&lt;");
-            //text = text.replace(/>/g, "&gt;");
-            //text = text.replace('\n', '<br>', 'g');
-            element.value += text + "\n";
-            element.scrollTop = 99999; // focus on bottom
-          };
-        })(),
-        printErr: function(text) {
-          var text = Array.prototype.slice.call(arguments).join(' ');
-          var element = document.getElementById('output');
-          element.value += text + "\n";
-          element.scrollTop = 99999; // focus on bottom
-        },
-        canvas: document.getElementById('canvas'),
-        setStatus: function(text) {
-          if (Module.setStatus.interval) clearInterval(Module.setStatus.interval);
-          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-          var statusElement = document.getElementById('status');
-          var progressElement = document.getElementById('progress');
-          if (m) {
-            text = m[1];
-            progressElement.value = parseInt(m[2])*100;
-            progressElement.max = parseInt(m[4])*100;
-            progressElement.hidden = false;
-          } else {
-            progressElement.value = null;
-            progressElement.max = null;
-            progressElement.hidden = true;
-          }
-          statusElement.innerHTML = text;
-        },
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-          Module.setStatus(left ? 
-'Preparing... (' + (this.totalDependencies-left) + '/' + 
-this.totalDependencies + ')' : 'All downloads complete.');
-        }
-      };
-      Module.setStatus('Choose a Core to load...');
-    </script>
-
-
-</body></html>
+   <script src="//code.jquery.com/jquery-3.1.0.min.js"></script>
+   <script src="//rawgit.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js"></script>
+   <script src="//cdnjs.cloudflare.com/ajax/libs/tether/1.3.4/js/tether.min.js"></script>
+   <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.3/js/bootstrap.min.js"></script>
+   <script src="//cdnjs.cloudflare.com/ajax/libs/dropbox.js/0.10.2/dropbox.min.js"></script>
+   <!--script src="//wzrd.in/standalone/browserfs@0.6.1"></script-->
+   <script src="browserfs.js"></script>
+   <script src="embed.js"></script>
+</body>
+</html>
